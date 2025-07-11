@@ -22,16 +22,21 @@ export class StickFigure {
     }
 
     createSkeleton() {
-        // Root bone
+        // Root bone (at hips level)
         const rootBone = new THREE.Bone();
         rootBone.name = 'root';
         rootBone.position.set(0, 0, 0);
 
-        // Spine bones
+        // Spine bones - adjusted to match mesh geometry
+        const hipBone = new THREE.Bone();
+        hipBone.name = 'hip';
+        hipBone.position.set(0, 0, 0);
+        rootBone.add(hipBone);
+
         const spineBone = new THREE.Bone();
         spineBone.name = 'spine';
         spineBone.position.set(0, 0.8, 0);
-        rootBone.add(spineBone);
+        hipBone.add(spineBone);
 
         const chestBone = new THREE.Bone();
         chestBone.name = 'chest';
@@ -48,7 +53,7 @@ export class StickFigure {
         headBone.position.set(0, 0.2, 0);
         neckBone.add(headBone);
 
-        // Left arm
+        // Left arm - match mesh positions
         const leftShoulderBone = new THREE.Bone();
         leftShoulderBone.name = 'leftShoulder';
         leftShoulderBone.position.set(0.2, 0.2, 0);
@@ -69,7 +74,7 @@ export class StickFigure {
         leftHandBone.position.set(0.2, 0, 0);
         leftLowerArmBone.add(leftHandBone);
 
-        // Right arm
+        // Right arm - match mesh positions
         const rightShoulderBone = new THREE.Bone();
         rightShoulderBone.name = 'rightShoulder';
         rightShoulderBone.position.set(-0.2, 0.2, 0);
@@ -90,11 +95,11 @@ export class StickFigure {
         rightHandBone.position.set(-0.2, 0, 0);
         rightLowerArmBone.add(rightHandBone);
 
-        // Left leg
+        // Left leg - match mesh positions
         const leftHipBone = new THREE.Bone();
         leftHipBone.name = 'leftHip';
         leftHipBone.position.set(0.1, 0, 0);
-        rootBone.add(leftHipBone);
+        hipBone.add(leftHipBone);
 
         const leftUpperLegBone = new THREE.Bone();
         leftUpperLegBone.name = 'leftUpperLeg';
@@ -111,11 +116,11 @@ export class StickFigure {
         leftFootBone.position.set(0, -0.15, 0.1);
         leftLowerLegBone.add(leftFootBone);
 
-        // Right leg
+        // Right leg - match mesh positions
         const rightHipBone = new THREE.Bone();
         rightHipBone.name = 'rightHip';
         rightHipBone.position.set(-0.1, 0, 0);
-        rootBone.add(rightHipBone);
+        hipBone.add(rightHipBone);
 
         const rightUpperLegBone = new THREE.Bone();
         rightUpperLegBone.name = 'rightUpperLeg';
@@ -135,6 +140,7 @@ export class StickFigure {
         // Store bones for easy access
         this.bones = {
             root: rootBone,
+            hip: hipBone,
             spine: spineBone,
             chest: chestBone,
             neck: neckBone,
@@ -159,7 +165,7 @@ export class StickFigure {
 
         // Create skeleton
         this.skeleton = new THREE.Skeleton([
-            rootBone, spineBone, chestBone, neckBone, headBone,
+            rootBone, hipBone, spineBone, chestBone, neckBone, headBone,
             leftShoulderBone, leftUpperArmBone, leftLowerArmBone, leftHandBone,
             rightShoulderBone, rightUpperArmBone, rightLowerArmBone, rightHandBone,
             leftHipBone, leftUpperLegBone, leftLowerLegBone, leftFootBone,
@@ -319,114 +325,184 @@ export class StickFigure {
     updateFromPose(landmarks) {
         if (!landmarks || landmarks.length === 0) return;
 
+        // MediaPipe pose landmark indices
+        const POSE_LANDMARKS = {
+            NOSE: 0,
+            LEFT_EYE_INNER: 1,
+            LEFT_EYE: 2,
+            LEFT_EYE_OUTER: 3,
+            RIGHT_EYE_INNER: 4,
+            RIGHT_EYE: 5,
+            RIGHT_EYE_OUTER: 6,
+            LEFT_EAR: 7,
+            RIGHT_EAR: 8,
+            MOUTH_LEFT: 9,
+            MOUTH_RIGHT: 10,
+            LEFT_SHOULDER: 11,
+            RIGHT_SHOULDER: 12,
+            LEFT_ELBOW: 13,
+            RIGHT_ELBOW: 14,
+            LEFT_WRIST: 15,
+            RIGHT_WRIST: 16,
+            LEFT_PINKY: 17,
+            RIGHT_PINKY: 18,
+            LEFT_INDEX: 19,
+            RIGHT_INDEX: 20,
+            LEFT_THUMB: 21,
+            RIGHT_THUMB: 22,
+            LEFT_HIP: 23,
+            RIGHT_HIP: 24,
+            LEFT_KNEE: 25,
+            RIGHT_KNEE: 26,
+            LEFT_ANKLE: 27,
+            RIGHT_ANKLE: 28,
+            LEFT_HEEL: 29,
+            RIGHT_HEEL: 30,
+            LEFT_FOOT_INDEX: 31,
+            RIGHT_FOOT_INDEX: 32
+        };
+
         // Reset to original rotations
         Object.keys(this.bones).forEach(key => {
             this.bones[key].rotation.copy(this.originalRotations[key]);
         });
 
-        // Helper function to calculate rotation between two points
-        const calculateRotation = (from, to) => {
-            const direction = new THREE.Vector3(
-                to.x - from.x,
-                -(to.y - from.y), // Flip Y for correct orientation
-                to.z - from.z
-            ).normalize();
-            
-            const euler = new THREE.Euler();
-            euler.setFromVector3(direction);
-            return euler;
+        // Helper function to convert MediaPipe coordinates to world coordinates
+        const convertCoords = (landmark) => {
+            return new THREE.Vector3(
+                (landmark.x - 0.5) * 4, // Center around 0 and scale
+                (0.5 - landmark.y) * 4, // Flip Y axis and scale
+                landmark.z * 2 // Scale Z depth
+            );
         };
 
-        // Update bone rotations based on pose landmarks
+        // Helper function to calculate rotation from direction vector
+        const calculateRotation = (from, to) => {
+            const direction = new THREE.Vector3().subVectors(to, from).normalize();
+            const quaternion = new THREE.Quaternion();
+            
+            // Calculate rotation to point towards the target
+            const up = new THREE.Vector3(0, 1, 0);
+            const right = new THREE.Vector3().crossVectors(up, direction).normalize();
+            const newUp = new THREE.Vector3().crossVectors(direction, right).normalize();
+            
+            const matrix = new THREE.Matrix4();
+            matrix.makeBasis(right, newUp, direction);
+            quaternion.setFromRotationMatrix(matrix);
+            
+            return quaternion;
+        };
+
         try {
-            // Spine/torso alignment
-            if (landmarks[11] && landmarks[12]) { // left and right shoulder
-                const leftShoulder = landmarks[11];
-                const rightShoulder = landmarks[12];
-                const shoulderCenter = {
-                    x: (leftShoulder.x + rightShoulder.x) / 2,
-                    y: (leftShoulder.y + rightShoulder.y) / 2,
-                    z: (leftShoulder.z + rightShoulder.z) / 2
-                };
+            // Get key landmarks
+            const nose = landmarks[POSE_LANDMARKS.NOSE];
+            const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
+            const rightShoulder = landmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+            const leftElbow = landmarks[POSE_LANDMARKS.LEFT_ELBOW];
+            const rightElbow = landmarks[POSE_LANDMARKS.RIGHT_ELBOW];
+            const leftWrist = landmarks[POSE_LANDMARKS.LEFT_WRIST];
+            const rightWrist = landmarks[POSE_LANDMARKS.RIGHT_WRIST];
+            const leftHip = landmarks[POSE_LANDMARKS.LEFT_HIP];
+            const rightHip = landmarks[POSE_LANDMARKS.RIGHT_HIP];
+            const leftKnee = landmarks[POSE_LANDMARKS.LEFT_KNEE];
+            const rightKnee = landmarks[POSE_LANDMARKS.RIGHT_KNEE];
+            const leftAnkle = landmarks[POSE_LANDMARKS.LEFT_ANKLE];
+            const rightAnkle = landmarks[POSE_LANDMARKS.RIGHT_ANKLE];
+
+            // Calculate center points
+            const shoulderCenter = {
+                x: (leftShoulder.x + rightShoulder.x) / 2,
+                y: (leftShoulder.y + rightShoulder.y) / 2,
+                z: (leftShoulder.z + rightShoulder.z) / 2
+            };
+
+            const hipCenter = {
+                x: (leftHip.x + rightHip.x) / 2,
+                y: (leftHip.y + rightHip.y) / 2,
+                z: (leftHip.z + rightHip.z) / 2
+            };
+
+            // Position root bone at hip center
+            const rootPos = convertCoords(hipCenter);
+            this.bones.root.position.copy(rootPos);
+
+            // Torso rotation (spine)
+            if (leftShoulder && rightShoulder && leftHip && rightHip) {
+                const shoulderPos = convertCoords(shoulderCenter);
+                const hipPos = convertCoords(hipCenter);
+                const spineDirection = new THREE.Vector3().subVectors(shoulderPos, hipPos).normalize();
                 
-                if (landmarks[23] && landmarks[24]) { // left and right hip
-                    const leftHip = landmarks[23];
-                    const rightHip = landmarks[24];
-                    const hipCenter = {
-                        x: (leftHip.x + rightHip.x) / 2,
-                        y: (leftHip.y + rightHip.y) / 2,
-                        z: (leftHip.z + rightHip.z) / 2
-                    };
-                    
-                    const spineRotation = calculateRotation(hipCenter, shoulderCenter);
-                    this.bones.spine.rotation.x = spineRotation.x;
-                    this.bones.spine.rotation.z = spineRotation.z;
-                }
+                // Calculate spine rotation
+                const spineQuaternion = calculateRotation(hipPos, shoulderPos);
+                this.bones.spine.setRotationFromQuaternion(spineQuaternion);
             }
 
-            // Arms
-            if (landmarks[11] && landmarks[13]) { // left shoulder to left elbow
-                const rotation = calculateRotation(landmarks[11], landmarks[13]);
-                this.bones.leftUpperArm.rotation.x = rotation.x;
-                this.bones.leftUpperArm.rotation.z = rotation.z;
-            }
-            
-            if (landmarks[13] && landmarks[15]) { // left elbow to left wrist
-                const rotation = calculateRotation(landmarks[13], landmarks[15]);
-                this.bones.leftLowerArm.rotation.x = rotation.x;
-                this.bones.leftLowerArm.rotation.z = rotation.z;
-            }
-            
-            if (landmarks[12] && landmarks[14]) { // right shoulder to right elbow
-                const rotation = calculateRotation(landmarks[12], landmarks[14]);
-                this.bones.rightUpperArm.rotation.x = rotation.x;
-                this.bones.rightUpperArm.rotation.z = rotation.z;
-            }
-            
-            if (landmarks[14] && landmarks[16]) { // right elbow to right wrist
-                const rotation = calculateRotation(landmarks[14], landmarks[16]);
-                this.bones.rightLowerArm.rotation.x = rotation.x;
-                this.bones.rightLowerArm.rotation.z = rotation.z;
+            // Head/neck rotation
+            if (nose && leftShoulder && rightShoulder) {
+                const nosePos = convertCoords(nose);
+                const shoulderPos = convertCoords(shoulderCenter);
+                const neckQuaternion = calculateRotation(shoulderPos, nosePos);
+                this.bones.neck.setRotationFromQuaternion(neckQuaternion);
             }
 
-            // Legs
-            if (landmarks[23] && landmarks[25]) { // left hip to left knee
-                const rotation = calculateRotation(landmarks[23], landmarks[25]);
-                this.bones.leftUpperLeg.rotation.x = rotation.x;
-                this.bones.leftUpperLeg.rotation.z = rotation.z;
-            }
-            
-            if (landmarks[25] && landmarks[27]) { // left knee to left ankle
-                const rotation = calculateRotation(landmarks[25], landmarks[27]);
-                this.bones.leftLowerLeg.rotation.x = rotation.x;
-                this.bones.leftLowerLeg.rotation.z = rotation.z;
-            }
-            
-            if (landmarks[24] && landmarks[26]) { // right hip to right knee
-                const rotation = calculateRotation(landmarks[24], landmarks[26]);
-                this.bones.rightUpperLeg.rotation.x = rotation.x;
-                this.bones.rightUpperLeg.rotation.z = rotation.z;
-            }
-            
-            if (landmarks[26] && landmarks[28]) { // right knee to right ankle
-                const rotation = calculateRotation(landmarks[26], landmarks[28]);
-                this.bones.rightLowerLeg.rotation.x = rotation.x;
-                this.bones.rightLowerLeg.rotation.z = rotation.z;
+            // Left arm
+            if (leftShoulder && leftElbow) {
+                const shoulderPos = convertCoords(leftShoulder);
+                const elbowPos = convertCoords(leftElbow);
+                const upperArmQuaternion = calculateRotation(shoulderPos, elbowPos);
+                this.bones.leftUpperArm.setRotationFromQuaternion(upperArmQuaternion);
             }
 
-            // Head/neck
-            if (landmarks[0] && landmarks[11] && landmarks[12]) { // nose and shoulders
-                const leftShoulder = landmarks[11];
-                const rightShoulder = landmarks[12];
-                const shoulderCenter = {
-                    x: (leftShoulder.x + rightShoulder.x) / 2,
-                    y: (leftShoulder.y + rightShoulder.y) / 2,
-                    z: (leftShoulder.z + rightShoulder.z) / 2
-                };
-                
-                const neckRotation = calculateRotation(shoulderCenter, landmarks[0]);
-                this.bones.neck.rotation.x = neckRotation.x;
-                this.bones.neck.rotation.z = neckRotation.z;
+            if (leftElbow && leftWrist) {
+                const elbowPos = convertCoords(leftElbow);
+                const wristPos = convertCoords(leftWrist);
+                const lowerArmQuaternion = calculateRotation(elbowPos, wristPos);
+                this.bones.leftLowerArm.setRotationFromQuaternion(lowerArmQuaternion);
+            }
+
+            // Right arm
+            if (rightShoulder && rightElbow) {
+                const shoulderPos = convertCoords(rightShoulder);
+                const elbowPos = convertCoords(rightElbow);
+                const upperArmQuaternion = calculateRotation(shoulderPos, elbowPos);
+                this.bones.rightUpperArm.setRotationFromQuaternion(upperArmQuaternion);
+            }
+
+            if (rightElbow && rightWrist) {
+                const elbowPos = convertCoords(rightElbow);
+                const wristPos = convertCoords(rightWrist);
+                const lowerArmQuaternion = calculateRotation(elbowPos, wristPos);
+                this.bones.rightLowerArm.setRotationFromQuaternion(lowerArmQuaternion);
+            }
+
+            // Left leg
+            if (leftHip && leftKnee) {
+                const hipPos = convertCoords(leftHip);
+                const kneePos = convertCoords(leftKnee);
+                const upperLegQuaternion = calculateRotation(hipPos, kneePos);
+                this.bones.leftUpperLeg.setRotationFromQuaternion(upperLegQuaternion);
+            }
+
+            if (leftKnee && leftAnkle) {
+                const kneePos = convertCoords(leftKnee);
+                const anklePos = convertCoords(leftAnkle);
+                const lowerLegQuaternion = calculateRotation(kneePos, anklePos);
+                this.bones.leftLowerLeg.setRotationFromQuaternion(lowerLegQuaternion);
+            }
+
+            // Right leg
+            if (rightHip && rightKnee) {
+                const hipPos = convertCoords(rightHip);
+                const kneePos = convertCoords(rightKnee);
+                const upperLegQuaternion = calculateRotation(hipPos, kneePos);
+                this.bones.rightUpperLeg.setRotationFromQuaternion(upperLegQuaternion);
+            }
+
+            if (rightKnee && rightAnkle) {
+                const kneePos = convertCoords(rightKnee);
+                const anklePos = convertCoords(rightAnkle);
+                const lowerLegQuaternion = calculateRotation(kneePos, anklePos);
+                this.bones.rightLowerLeg.setRotationFromQuaternion(lowerLegQuaternion);
             }
 
         } catch (error) {
