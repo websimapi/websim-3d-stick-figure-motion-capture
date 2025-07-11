@@ -7,11 +7,21 @@ export class PoseDetection {
     }
 
     async initialize() {
-        // Initialize MediaPipe Pose
-        const { Pose } = await import('@mediapipe/pose');
-        const { Camera } = await import('@mediapipe/camera_utils');
-        
-        this.pose = new Pose({
+        // Wait for MediaPipe to load
+        if (typeof window.Pose === 'undefined') {
+            await new Promise((resolve) => {
+                const checkMediaPipe = () => {
+                    if (typeof window.Pose !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(checkMediaPipe, 100);
+                    }
+                };
+                checkMediaPipe();
+            });
+        }
+
+        this.pose = new window.Pose({
             locateFile: (file) => {
                 return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`;
             }
@@ -57,7 +67,7 @@ export class PoseDetection {
                 };
             });
 
-            this.camera = new Camera(video, {
+            this.camera = new window.Camera(video, {
                 onFrame: async () => {
                     await this.pose.send({ image: video });
                 },
@@ -100,4 +110,3 @@ export class PoseDetection {
         return this.isRunning;
     }
 }
-
