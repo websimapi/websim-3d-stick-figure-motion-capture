@@ -30,106 +30,106 @@ export class StickFigure {
         // Spine bones
         const spineBone = new THREE.Bone();
         spineBone.name = 'spine';
-        spineBone.position.set(0, 0.5, 0);
+        spineBone.position.set(0, 0.8, 0);
         rootBone.add(spineBone);
 
         const chestBone = new THREE.Bone();
         chestBone.name = 'chest';
-        chestBone.position.set(0, 0.8, 0);
+        chestBone.position.set(0, 0.6, 0);
         spineBone.add(chestBone);
 
         const neckBone = new THREE.Bone();
         neckBone.name = 'neck';
-        neckBone.position.set(0, 0.4, 0);
+        neckBone.position.set(0, 0.3, 0);
         chestBone.add(neckBone);
 
         const headBone = new THREE.Bone();
         headBone.name = 'head';
-        headBone.position.set(0, 0.3, 0);
+        headBone.position.set(0, 0.2, 0);
         neckBone.add(headBone);
 
         // Left arm
         const leftShoulderBone = new THREE.Bone();
         leftShoulderBone.name = 'leftShoulder';
-        leftShoulderBone.position.set(0.3, 0.2, 0);
+        leftShoulderBone.position.set(0.2, 0.2, 0);
         chestBone.add(leftShoulderBone);
 
         const leftUpperArmBone = new THREE.Bone();
         leftUpperArmBone.name = 'leftUpperArm';
-        leftUpperArmBone.position.set(0.4, 0, 0);
+        leftUpperArmBone.position.set(0.3, 0, 0);
         leftShoulderBone.add(leftUpperArmBone);
 
         const leftLowerArmBone = new THREE.Bone();
         leftLowerArmBone.name = 'leftLowerArm';
-        leftLowerArmBone.position.set(0.4, 0, 0);
+        leftLowerArmBone.position.set(0.3, 0, 0);
         leftUpperArmBone.add(leftLowerArmBone);
 
         const leftHandBone = new THREE.Bone();
         leftHandBone.name = 'leftHand';
-        leftHandBone.position.set(0.3, 0, 0);
+        leftHandBone.position.set(0.2, 0, 0);
         leftLowerArmBone.add(leftHandBone);
 
         // Right arm
         const rightShoulderBone = new THREE.Bone();
         rightShoulderBone.name = 'rightShoulder';
-        rightShoulderBone.position.set(-0.3, 0.2, 0);
+        rightShoulderBone.position.set(-0.2, 0.2, 0);
         chestBone.add(rightShoulderBone);
 
         const rightUpperArmBone = new THREE.Bone();
         rightUpperArmBone.name = 'rightUpperArm';
-        rightUpperArmBone.position.set(-0.4, 0, 0);
+        rightUpperArmBone.position.set(-0.3, 0, 0);
         rightShoulderBone.add(rightUpperArmBone);
 
         const rightLowerArmBone = new THREE.Bone();
         rightLowerArmBone.name = 'rightLowerArm';
-        rightLowerArmBone.position.set(-0.4, 0, 0);
+        rightLowerArmBone.position.set(-0.3, 0, 0);
         rightUpperArmBone.add(rightLowerArmBone);
 
         const rightHandBone = new THREE.Bone();
         rightHandBone.name = 'rightHand';
-        rightHandBone.position.set(-0.3, 0, 0);
+        rightHandBone.position.set(-0.2, 0, 0);
         rightLowerArmBone.add(rightHandBone);
 
         // Left leg
         const leftHipBone = new THREE.Bone();
         leftHipBone.name = 'leftHip';
-        leftHipBone.position.set(0.15, -0.1, 0);
+        leftHipBone.position.set(0.1, 0, 0);
         rootBone.add(leftHipBone);
 
         const leftUpperLegBone = new THREE.Bone();
         leftUpperLegBone.name = 'leftUpperLeg';
-        leftUpperLegBone.position.set(0, -0.6, 0);
+        leftUpperLegBone.position.set(0, -0.5, 0);
         leftHipBone.add(leftUpperLegBone);
 
         const leftLowerLegBone = new THREE.Bone();
         leftLowerLegBone.name = 'leftLowerLeg';
-        leftLowerLegBone.position.set(0, -0.6, 0);
+        leftLowerLegBone.position.set(0, -0.5, 0);
         leftUpperLegBone.add(leftLowerLegBone);
 
         const leftFootBone = new THREE.Bone();
         leftFootBone.name = 'leftFoot';
-        leftFootBone.position.set(0, -0.2, 0.1);
+        leftFootBone.position.set(0, -0.15, 0.1);
         leftLowerLegBone.add(leftFootBone);
 
         // Right leg
         const rightHipBone = new THREE.Bone();
         rightHipBone.name = 'rightHip';
-        rightHipBone.position.set(-0.15, -0.1, 0);
+        rightHipBone.position.set(-0.1, 0, 0);
         rootBone.add(rightHipBone);
 
         const rightUpperLegBone = new THREE.Bone();
         rightUpperLegBone.name = 'rightUpperLeg';
-        rightUpperLegBone.position.set(0, -0.6, 0);
+        rightUpperLegBone.position.set(0, -0.5, 0);
         rightHipBone.add(rightUpperLegBone);
 
         const rightLowerLegBone = new THREE.Bone();
         rightLowerLegBone.name = 'rightLowerLeg';
-        rightLowerLegBone.position.set(0, -0.6, 0);
+        rightLowerLegBone.position.set(0, -0.5, 0);
         rightUpperLegBone.add(rightLowerLegBone);
 
         const rightFootBone = new THREE.Bone();
         rightFootBone.name = 'rightFoot';
-        rightFootBone.position.set(0, -0.2, 0.1);
+        rightFootBone.position.set(0, -0.15, 0.1);
         rightLowerLegBone.add(rightFootBone);
 
         // Store bones for easy access
@@ -184,7 +184,7 @@ export class StickFigure {
             const startVert = vertices.length / 3;
             const direction = new THREE.Vector3().subVectors(end, start);
             const length = direction.length();
-            const radius = 0.05;
+            const radius = 0.03;
             
             // Create cylinder vertices
             for (let i = 0; i <= segments; i++) {
@@ -217,9 +217,9 @@ export class StickFigure {
         };
 
         // Add head (sphere)
-        const headCenter = new THREE.Vector3(0, 2.5, 0);
-        const headRadius = 0.15;
-        const headSegments = 12;
+        const headCenter = new THREE.Vector3(0, 1.9, 0);
+        const headRadius = 0.1;
+        const headSegments = 8;
         const headStartVert = vertices.length / 3;
         
         for (let i = 0; i <= headSegments; i++) {
@@ -250,22 +250,31 @@ export class StickFigure {
             }
         }
 
-        // Add limbs with proper bone indices
-        addLimb(new THREE.Vector3(0, 1.7, 0), new THREE.Vector3(0, 2.1, 0), 3); // neck
-        addLimb(new THREE.Vector3(0, 0.5, 0), new THREE.Vector3(0, 1.3, 0), 1); // spine
-        addLimb(new THREE.Vector3(0, 1.3, 0), new THREE.Vector3(0, 1.7, 0), 2); // chest
+        // Add limbs with proper bone indices matching the skeleton hierarchy
+        // Torso
+        addLimb(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.8, 0), 1); // root to spine
+        addLimb(new THREE.Vector3(0, 0.8, 0), new THREE.Vector3(0, 1.4, 0), 2); // spine to chest
+        addLimb(new THREE.Vector3(0, 1.4, 0), new THREE.Vector3(0, 1.7, 0), 3); // chest to neck
         
-        // Arms
-        addLimb(new THREE.Vector3(0.3, 1.5, 0), new THREE.Vector3(0.7, 1.5, 0), 6); // left upper arm
-        addLimb(new THREE.Vector3(0.7, 1.5, 0), new THREE.Vector3(1.1, 1.5, 0), 7); // left lower arm
-        addLimb(new THREE.Vector3(-0.3, 1.5, 0), new THREE.Vector3(-0.7, 1.5, 0), 10); // right upper arm
-        addLimb(new THREE.Vector3(-0.7, 1.5, 0), new THREE.Vector3(-1.1, 1.5, 0), 11); // right lower arm
+        // Left arm
+        addLimb(new THREE.Vector3(0.2, 1.6, 0), new THREE.Vector3(0.5, 1.6, 0), 6); // left shoulder to upper arm
+        addLimb(new THREE.Vector3(0.5, 1.6, 0), new THREE.Vector3(0.8, 1.6, 0), 7); // left upper arm to lower arm
+        addLimb(new THREE.Vector3(0.8, 1.6, 0), new THREE.Vector3(1.0, 1.6, 0), 8); // left lower arm to hand
         
-        // Legs
-        addLimb(new THREE.Vector3(0.15, -0.1, 0), new THREE.Vector3(0.15, -0.7, 0), 14); // left upper leg
-        addLimb(new THREE.Vector3(0.15, -0.7, 0), new THREE.Vector3(0.15, -1.3, 0), 15); // left lower leg
-        addLimb(new THREE.Vector3(-0.15, -0.1, 0), new THREE.Vector3(-0.15, -0.7, 0), 18); // right upper leg
-        addLimb(new THREE.Vector3(-0.15, -0.7, 0), new THREE.Vector3(-0.15, -1.3, 0), 19); // right lower leg
+        // Right arm
+        addLimb(new THREE.Vector3(-0.2, 1.6, 0), new THREE.Vector3(-0.5, 1.6, 0), 10); // right shoulder to upper arm
+        addLimb(new THREE.Vector3(-0.5, 1.6, 0), new THREE.Vector3(-0.8, 1.6, 0), 11); // right upper arm to lower arm
+        addLimb(new THREE.Vector3(-0.8, 1.6, 0), new THREE.Vector3(-1.0, 1.6, 0), 12); // right lower arm to hand
+        
+        // Left leg
+        addLimb(new THREE.Vector3(0.1, 0, 0), new THREE.Vector3(0.1, -0.5, 0), 14); // left hip to upper leg
+        addLimb(new THREE.Vector3(0.1, -0.5, 0), new THREE.Vector3(0.1, -1.0, 0), 15); // left upper leg to lower leg
+        addLimb(new THREE.Vector3(0.1, -1.0, 0), new THREE.Vector3(0.1, -1.15, 0.1), 16); // left lower leg to foot
+        
+        // Right leg
+        addLimb(new THREE.Vector3(-0.1, 0, 0), new THREE.Vector3(-0.1, -0.5, 0), 18); // right hip to upper leg
+        addLimb(new THREE.Vector3(-0.1, -0.5, 0), new THREE.Vector3(-0.1, -1.0, 0), 19); // right upper leg to lower leg
+        addLimb(new THREE.Vector3(-0.1, -1.0, 0), new THREE.Vector3(-0.1, -1.15, 0.1), 20); // right lower leg to foot
 
         // Set geometry attributes
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
@@ -433,4 +442,3 @@ export class StickFigure {
         return this.skeleton;
     }
 }
-
